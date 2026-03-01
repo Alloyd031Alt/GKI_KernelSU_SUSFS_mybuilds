@@ -644,10 +644,10 @@ jobs:
           cp $SUKISU_PATCHES/other/zram/zram_patch/${{ inputs.kernel_version }}/lz4k_oplus.patch ./
           patch -p1 -F 3 < lz4k_oplus.patch || true
 
-      # ==================== 修复三星 6.6 WiFi/蓝牙 ====================
+      # ==================== 修复三星 6.6/6.12 WiFi/蓝牙 ====================
       # 添加三星设备所需的 KDP 符号
-      - name: 修复三星 6.6 WiFi/蓝牙
-        if: inputs.kernel_version == '6.6'
+      - name: 修复三星 6.6/6.12 WiFi/蓝牙
+        if: inputs.kernel_version == '6.6' || inputs.kernel_version == '6.12'
         working-directory: ${{ env.KERNEL_ROOT }}/common
         run: |
           SYMBOL_LIST=android/abi_gki_aarch64_galaxy
@@ -663,10 +663,10 @@ jobs:
           cp "$KERNEL_PATCHES/samsung/min_kdp/min_kdp.c" drivers/min_kdp.c
           echo "obj-y += min_kdp.o" >> drivers/Makefile
 
-      # ==================== 修复小米 6.6 WiFi/蓝牙 ====================
+      # ==================== 修复小米 6.6/6.12 WiFi/蓝牙 ====================
       # 添加小米设备所需的符号
-      - name: 修复小米 6.6 WiFi/蓝牙
-        if: inputs.kernel_version == '6.6'
+      - name: 修复小米 6.6/6.12 WiFi/蓝牙
+        if: inputs.kernel_version == '6.6' || inputs.kernel_version == '6.12'
         working-directory: ${{ env.KERNEL_ROOT }}/common
         run: |
           echo "device_find_any_child" >> android/abi_gki_aarch64_xiaomi
@@ -702,7 +702,7 @@ jobs:
             sed -i 's/CONFIG_ZRAM=m/CONFIG_ZRAM=y/g' "$CONFIG_FILE"
           fi
 
-          if [ "${{ inputs.android_version }}" = "android14" ] || [ "${{ inputs.android_version }}" = "android15" ]; then
+          if [ "${{ inputs.android_version }}" = "android14" ] || [ "${{ inputs.android_version }}" = "android15" ] || [ "${{ inputs.android_version }}" = "android16" ]; then
             sed -i 's/"drivers\/block\/zram\/zram\.ko",//g; s/"mm\/zsmalloc\.ko",//g' "$KERNEL_ROOT/common/modules.bzl"
             echo "CONFIG_MODULE_SIG_FORCE=n" >> "$CONFIG_FILE"
           fi
@@ -843,7 +843,7 @@ jobs:
                 TARGET_PATH="$KERNEL_ROOT/out/${{ inputs.android_version }}-${{ inputs.kernel_version }}/dist"
               fi
               ;;
-            "android14"|"android15")
+            "android14"|"android15"|"android16")
               TARGET_PATH="$KERNEL_ROOT/bazel-bin/common/kernel_aarch64/"
               ;;
           esac
@@ -920,7 +920,7 @@ jobs:
       # ==================== 构建 Boot 镜像 (Android 13+) ====================
       # Android 13 及以上版本不需要 ramdisk
       - name: 构建 Boot 镜像 (Android 13+)
-        if: inputs.android_version == 'android13' || inputs.android_version == 'android14' || inputs.android_version == 'android15'
+        if: inputs.android_version == 'android13' || inputs.android_version == 'android14' || inputs.android_version == 'android15' || inputs.android_version == 'android16'
         working-directory: bootimgs
         run: |
           gzip -n -k -f -9 ./Image > ./Image.gz
